@@ -383,7 +383,7 @@ func (c *consulRegistry) GetService(name string, opts ...registry.GetOption) ([]
 		svc.Nodes = append(svc.Nodes, &registry.Node{
 			Id:       id,
 			Address:  mnet.HostPort(address, s.Service.Port),
-			Metadata: decodeMetadata(s.Service.Tags),
+			Metadata: s.Service.Meta,
 		})
 	}
 

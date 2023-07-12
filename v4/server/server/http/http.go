@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -262,16 +263,24 @@ func (h *httpServer) Start() error {
 	h.Unlock()
 
 	var (
-		ln  net.Listener
-		err error
+		ln   net.Listener
+		err  error
+		port string
 	)
+
+	parts := strings.Split(opts.Address, ":")
+	if len(parts) > 1 {
+		port = fmt.Sprintf(":%s", parts[len(parts)-1])
+	} else {
+		port = opts.Address
+	}
 
 	if l := h.getListener(); l != nil {
 		ln = l
 	} else if opts.TLSConfig != nil {
-		ln, err = tls.Listen("tcp", opts.Address, opts.TLSConfig)
+		ln, err = tls.Listen("tcp", port, opts.TLSConfig)
 	} else {
-		ln, err = net.Listen("tcp", opts.Address)
+		ln, err = net.Listen("tcp", port)
 	}
 
 	if err != nil {

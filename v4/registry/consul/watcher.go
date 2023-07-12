@@ -175,7 +175,6 @@ func (cw *consulWatcher) serviceHandler(idx uint64, data interface{}) {
 		cw.next <- &registry.Result{Action: action, Service: newService}
 	}
 
-	// Now check old versions that may not be in new services map
 	for _, old := range rservices[serviceName] {
 		// old version does not exist in new version map
 		// kill it with fire!
@@ -185,10 +184,16 @@ func (cw *consulWatcher) serviceHandler(idx uint64, data interface{}) {
 	}
 
 	// there are no services in the service, empty all services
-	if len(rservices) != 0 && serviceName == "" {
+	// flush all services
+	if len(rservices) > 1 && serviceName == "" {
 		for _, services := range rservices {
 			for _, service := range services {
-				cw.next <- &registry.Result{Action: "delete", Service: service}
+				if service.Nodes == nil || len(service.Nodes) == 0 {
+					cw.next <- &registry.Result{Action: "delete", Service: &registry.Service{}}
+				} else {
+					service := service
+					cw.next <- &registry.Result{Action: "delete", Service: service}
+				}
 			}
 		}
 	}
